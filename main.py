@@ -9,6 +9,9 @@ from pymunk.pygame_util import DrawOptions
 import pymc3 as pm
 import matplotlib.pyplot as plt
 import arviz as az
+import theano
+import theano.tensor as tt
+import numpy as np
 
 def add_ball(space):
     mass = 1
@@ -30,15 +33,13 @@ def add_ball_static(space):
     shape = pymunk.Circle(body, radius) # 4
     space.add(body, shape) # 5
     return shape
+
+
 def add_static_L(space,x,y,θ):
     body = pymunk.Body(body_type = pymunk.Body.STATIC)
-    try:
-        body.position = (x, y)
-        l1 = pymunk.Segment(body, (0, 0), (100, 0+θ), 2)
-        space.add(l1)
-    except TypeError:
-        pass
-    # return l1
+    body.position = (x, y)
+    l1 = pymunk.Segment(body, (0, 0), (100, 0+θ), 2)
+    space.add(l1)
 
 def add_bucket(space):
     floor = pymunk.Body(body_type = pymunk.Body.STATIC)
@@ -84,19 +85,24 @@ def add_L(space):
 
 
 # simulation(100,350,-20,250,280,0)  ## Good solution
+@theano.compile.ops.as_op(itypes=[tt.lscalar, tt.lscalar, tt.lscalar,
+                                  tt.lscalar, tt.lscalar, tt.lscalar],
+                          otypes=[tt.lscalar])
 def simulation(xl1, yl1, θl1,
                xl2, yl2, θl2):
+
     space = pymunk.Space()
     space.gravity = (0.0, -900.0)
-
+    
     add_static_L(space, xl1, yl1, θl1)
     add_static_L(space, xl2, yl2, θl2)
     add_bucket(space)
-    ball = add_ball_static(space)    
-
+    ball = add_ball_static(space)
+    
     [space.step(1/50.0) for i in range(0,5000)]
     # print("( " + str(ball.body.position.x) + ", " + str(ball.body.position.y) + ")")
-    return 1 if ball.body.position.x > 410 and ball.body.position.y < 240 else 20000000
+    # return 1 if ball.body.position.x > 410 and ball.body.position.y < 240 else 20000000
+    return np.array(ball.body.position.x, dtype=np.int64)
 
 def visualize_simulation(xl1, yl1, θl1,
                          xl2, yl2, θl2):
@@ -136,30 +142,23 @@ def visualize_simulation(xl1, yl1, θl1,
 
 
 def main():
-    # print(simulation(120,350,-20,250,280,0))
-    # visualize_simulation(100,350,-20,250,280,0)
-
     with pm.Model() as model:
-        xl1 = pm.Uniform('xl1', lower=0,upper=500)
-        yl1 = pm.Uniform('yl1', lower=0,upper=500)
-        θl1 = pm.Uniform('θl1', lower=-90,upper=90)
+        xl1 = pm.DiscreteUniform('xl1', lower=120,upper=121)
+        yl1 = pm.DiscreteUniform('yl1', lower=350,upper=351)
+        θl1 = pm.DiscreteUniform('θl1', lower=-20,upper=-19)
 
 
-        xl2 = pm.Uniform('xl2', lower=0,upper=500)
-        yl2 = pm.Uniform('yl2', lower=0,upper=500)
-        θl2 = pm.Uniform('θl2', lower=-90,upper=90)
+        xl2 = pm.DiscreteUniform('xl2', lower=0,upper=500)
+        yl2 = pm.DiscreteUniform('yl2', lower=280,upper=281)
+        θl2 = pm.DiscreteUniform('θl2', lower=0,upper=1)
 
-        obs = pm.Normal('obs', mu=simulation(xl1, yl1, θl1, xl2, yl2, θl2), sigma=0.001, observed=1)
-
-        trace = pm.sample(10000)
-
-        pm.traceplot(trace)
-        plt.show()
-
-        print(az.summary(trace))
+        # sim = pm.Deterministic('sim', simulation(xl1, yl1, θl1, xl2, yl2, θl2))
         
+        obs = pm.Normal('obs',
+                        mu=simulation(xl1, yl1, θl1, xl2, yl2, θl2),
+                        sigma=.001, observed=484)
+
+        trace = pm.sample(10)      
 
 if __name__ == '__main__':
     sys.exit(main())
-
-
