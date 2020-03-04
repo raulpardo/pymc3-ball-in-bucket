@@ -99,7 +99,7 @@ def simulation(xl1, yl1, θl1,
     ball = add_ball_static(space)
     
     [space.step(1/50.0) for i in range(0,50000)]
-    return (ball.body.position.x, ball.body.position.y) if ball.body.position.y > 210 else 0
+    return np.array(ball.body.position.x,dtype=np.int64) if ball.body.position.y > 210 else np.array(0,dtype=np.int64)
 
 def visualize_simulation(xl1, yl1, θl1,
                          xl2, yl2, θl2):
@@ -118,7 +118,8 @@ def visualize_simulation(xl1, yl1, θl1,
 
     draw_options = DrawOptions(screen)
 
-    while True:
+    stop = False
+    while not stop:
         for event in pygame.event.get():
             if event.type == QUIT:
                 sys.exit(0)
@@ -126,14 +127,9 @@ def visualize_simulation(xl1, yl1, θl1,
                 sys.exit(0)
 
         if ball.body.position.x > 410 and ball.body.position.y < 240:
-            print(ball.body.position.x)
-            
-        print("("  +
-              str(ball.body.position.x) +
-              ", " +
-              str(ball.body.position.y) +
-              ")")
-
+            print("Ball in the bucket!")
+            stop=True
+    
         screen.fill((255,255,255))
 
         space.debug_draw(draw_options)
@@ -145,10 +141,24 @@ def visualize_simulation(xl1, yl1, θl1,
 
 
 def main():
-    # print(simulation(120,350,-20,250,280,0))
-    visualize_simulation(142,493,-8,
-                         222,379,-11)
+    with pm.Model() as model:
+        xl1 = pm.DiscreteUniform('xl1', lower=0,upper=500)
+        yl1 = pm.DiscreteUniform('yl1', lower=150,upper=500)
+        θl1 = pm.DiscreteUniform('θl1', lower=-20,upper=20)
 
-   
+        xl2 = pm.DiscreteUniform('xl2', lower=0,upper=500)
+        yl2 = pm.DiscreteUniform('yl2', lower=150,upper=500)
+        θl2 = pm.DiscreteUniform('θl2', lower=-20,upper=20)
+        
+        obs = pm.Normal('obs',
+                        mu=simulation(xl1, yl1, θl1, xl2, yl2, θl2),
+                        sigma=.1, observed=484)
+
+        trace = pm.sample(10)
+
+        [visualize_simulation(t['xl1'],t['yl1'],t['θl1'],
+                              t['xl2'],t['yl2'],t['θl2'])
+         for t in trace]
+        
 if __name__ == '__main__':
     sys.exit(main())
