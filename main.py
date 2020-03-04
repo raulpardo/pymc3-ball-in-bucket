@@ -1,8 +1,14 @@
 import sys, random
+## Example inspire by Oregon summer school lectures on probabilistic programming
+## Code for simulation and visualization inspired from getting started tutorial in pymunk website
+
 import pygame
 from pygame.locals import *
-import pymunk #1
+import pymunk
 from pymunk.pygame_util import DrawOptions
+import pymc3 as pm
+import matplotlib.pyplot as plt
+import arviz as az
 
 def add_ball(space):
     mass = 1
@@ -24,15 +30,15 @@ def add_ball_static(space):
     shape = pymunk.Circle(body, radius) # 4
     space.add(body, shape) # 5
     return shape
-
 def add_static_L(space,x,y,θ):
-    body = pymunk.Body(body_type = pymunk.Body.STATIC) # 1
-    body.position = (x, y)
-    l1 = pymunk.Segment(body, (0, 0), (100, 0+θ), 2) # 2
-    # l1 = pymunk.Segment(body, (-150, 0), (-150, 50), 5)
-
-    space.add(l1)#, l2) # 3
-    return l1#,l2
+    body = pymunk.Body(body_type = pymunk.Body.STATIC)
+    try:
+        body.position = (x, y)
+        l1 = pymunk.Segment(body, (0, 0), (100, 0+θ), 2)
+        space.add(l1)
+    except TypeError:
+        pass
+    # return l1
 
 def add_bucket(space):
     floor = pymunk.Body(body_type = pymunk.Body.STATIC)
@@ -77,23 +83,38 @@ def add_L(space):
     return l1,l2
 
 
-def main():
-    pygame.init()
-    screen = pygame.display.set_mode((600, 600))
-    pygame.display.set_caption("Joints. Just wait and the L will tip over")
-    clock = pygame.time.Clock()
-
-    space = pymunk.Space() #2
+# simulation(100,350,-20,250,280,0)  ## Good solution
+def simulation(xl1, yl1, θl1,
+               xl2, yl2, θl2):
+    space = pymunk.Space()
     space.gravity = (0.0, -900.0)
 
-    lines = add_static_L(space,100,350,-20)
-    lines = add_static_L(space,250,280,0)
+    add_static_L(space, xl1, yl1, θl1)
+    add_static_L(space, xl2, yl2, θl2)
+    add_bucket(space)
+    ball = add_ball_static(space)    
+
+    [space.step(1/50.0) for i in range(0,5000)]
+    # print("( " + str(ball.body.position.x) + ", " + str(ball.body.position.y) + ")")
+    return 1 if ball.body.position.x > 410 and ball.body.position.y < 240 else 20000000
+
+def visualize_simulation(xl1, yl1, θl1,
+                         xl2, yl2, θl2):
+    pygame.init()
+    screen = pygame.display.set_mode((600, 600))
+    pygame.display.set_caption("Ball in the bucket game")
+    clock = pygame.time.Clock()
+
+    space = pymunk.Space()
+    space.gravity = (0.0, -900.0)
+
+    lines = add_static_L(space, xl1, yl1, θl1)
+    lines = add_static_L(space, xl2, yl2, θl2)
     lines = add_bucket(space)
     ball = add_ball_static(space)
-    # balls = []
+
     draw_options = DrawOptions(screen)
 
-    ticks_to_next_ball = 10
     while True:
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -102,34 +123,41 @@ def main():
                 sys.exit(0)
 
         if ball.body.position.x > 410 and ball.body.position.y < 240:
-            # print("( " + str(ball.body.position.x) + ", " + str(ball.body.position.y) + ")")
             print("Ball in!")
-            sys.exit(0)
-                    
-
-        # ticks_to_next_ball -= 1
-        # if ticks_to_next_ball <= 0:
-        #     ticks_to_next_ball = 25
-        #     ball_shape = add_ball_static(space)
-        #     balls.append(ball_shape)            
 
         screen.fill((255,255,255))
 
-        # balls_to_remove = []
-        # for ball in balls:
-        #     if ball.body.position.y < 150:
-        #         balls_to_remove.append(ball)
-
-        # for ball in balls_to_remove:
-        #     space.remove(ball, ball.body)
-        #     balls.remove(ball)
-
         space.debug_draw(draw_options)
         
-        space.step(1/50.0) #3       
+        space.step(1/50.0)
 
         pygame.display.flip()
         clock.tick(50)
+
+
+def main():
+    # print(simulation(120,350,-20,250,280,0))
+    # visualize_simulation(100,350,-20,250,280,0)
+
+    with pm.Model() as model:
+        xl1 = pm.Uniform('xl1', lower=0,upper=500)
+        yl1 = pm.Uniform('yl1', lower=0,upper=500)
+        θl1 = pm.Uniform('θl1', lower=-90,upper=90)
+
+
+        xl2 = pm.Uniform('xl2', lower=0,upper=500)
+        yl2 = pm.Uniform('yl2', lower=0,upper=500)
+        θl2 = pm.Uniform('θl2', lower=-90,upper=90)
+
+        obs = pm.Normal('obs', mu=simulation(xl1, yl1, θl1, xl2, yl2, θl2), sigma=0.001, observed=1)
+
+        trace = pm.sample(10000)
+
+        pm.traceplot(trace)
+        plt.show()
+
+        print(az.summary(trace))
+        
 
 if __name__ == '__main__':
     sys.exit(main())
