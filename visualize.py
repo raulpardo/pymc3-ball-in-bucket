@@ -34,13 +34,11 @@ def add_ball_static(space):
     space.add(body, shape) # 5
     return shape
 
-
 def add_static_L(space,x,y,θ):
     body = pymunk.Body(body_type = pymunk.Body.STATIC)
     body.position = (x, y)
     l1 = pymunk.Segment(body, (0, 0), (100, 0+θ), 2)
     space.add(l1)
-    # return l1
 
 def add_bucket(space):
     floor = pymunk.Body(body_type = pymunk.Body.STATIC)
@@ -86,9 +84,9 @@ def add_L(space):
 
 
 # simulation(100,350,-20,250,280,0)  ## Good solution
-# @theano.compile.ops.as_op(itypes=[tt.lscalar, tt.lscalar, tt.lscalar,
-#                                   tt.lscalar, tt.lscalar, tt.lscalar],
-#                           otypes=[tt.lscalar])
+@theano.compile.ops.as_op(itypes=[tt.lscalar, tt.lscalar, tt.lscalar,
+                                  tt.lscalar, tt.lscalar, tt.lscalar],
+                          otypes=[tt.lscalar])
 def simulation(xl1, yl1, θl1,
                xl2, yl2, θl2):
 
@@ -100,11 +98,8 @@ def simulation(xl1, yl1, θl1,
     add_bucket(space)
     ball = add_ball_static(space)
     
-    [space.step(1/50.0) for i in range(0,100000)]
-    # print("( " + str(ball.body.position.x) + ", " + str(ball.body.position.y) + ")")
-    # return 1 if ball.body.position.x > 410 and ball.body.position.y < 240 else 20000000
+    [space.step(1/50.0) for i in range(0,50000)]
     return (ball.body.position.x, ball.body.position.y) if ball.body.position.y > 210 else 0
-    # return (ball.body.position.x, ball.body.position.y)
 
 def visualize_simulation(xl1, yl1, θl1,
                          xl2, yl2, θl2):
@@ -116,9 +111,9 @@ def visualize_simulation(xl1, yl1, θl1,
     space = pymunk.Space()
     space.gravity = (0.0, -900.0)
 
-    lines = add_static_L(space, xl1, yl1, θl1)
-    lines = add_static_L(space, xl2, yl2, θl2)
-    lines = add_bucket(space)
+    add_static_L(space, xl1, yl1, θl1)
+    add_static_L(space, xl2, yl2, θl2)
+    add_bucket(space)
     ball = add_ball_static(space)
 
     draw_options = DrawOptions(screen)
@@ -133,7 +128,11 @@ def visualize_simulation(xl1, yl1, θl1,
         if ball.body.position.x > 410 and ball.body.position.y < 240:
             print(ball.body.position.x)
             
-        print("(" + str(ball.body.position.x) + ", " + str(ball.body.position.y) + ")")
+        print("("  +
+              str(ball.body.position.x) +
+              ", " +
+              str(ball.body.position.y) +
+              ")")
 
         screen.fill((255,255,255))
 
@@ -147,8 +146,8 @@ def visualize_simulation(xl1, yl1, θl1,
 
 def main():
     # print(simulation(120,350,-20,250,280,0))
-    visualize_simulation(134,367,-12,
-                         284,293,1)
+    visualize_simulation(142,493,-8,
+                         222,379,-11)
 
    
 if __name__ == '__main__':
