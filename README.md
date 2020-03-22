@@ -1,8 +1,9 @@
 # Ball in the bucket game with probabilistic programming!
 
-This is simple python script that illustrates how to use probabilistic
-programming (particularly PyMC3) to place bars in a 2 dimensional
-space so that a ball falling from the top ends up in a bucket.
+This is a simple python script that illustrates how to use
+probabilistic programming (particularly PyMC3) to place bars in a 2
+dimensional space so that a ball falling from the top ends up in a
+bucket.
 
 The program defines six random variables for the xy coordinates plus
 inclination of each bar. We set uniform priors for these
