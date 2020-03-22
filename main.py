@@ -34,7 +34,6 @@ def add_ball_static(space):
     space.add(body, shape) # 5
     return shape
 
-
 def add_static_L(space,x,y,θ):
     body = pymunk.Body(body_type = pymunk.Body.STATIC)
     body.position = (x, y)
@@ -55,36 +54,10 @@ def add_bucket(space):
     l2 = pymunk.Segment(left_wall, (0, 0), (0, 50), 2)
     l3 = pymunk.Segment(right_wall, (0, 50), (0, 0), 2)
 
-    space.add(l1, l2, l3) # 3
+    space.add(l1, l2, l3)
     return l1,l2,l3
 
-def add_L(space):
-    rotation_center_body = pymunk.Body(body_type = pymunk.Body.STATIC) # 1
-    rotation_center_body.position = (300, 300)
 
-    rotation_limit_body = pymunk.Body(body_type = pymunk.Body.STATIC)
-    rotation_limit_body.position = (200,300)
-
-    body = pymunk.Body(10, 10000) # 2
-    body.position = (300, 300)
-    l1 = pymunk.Segment(body, (-150, 0), (255.0, 0.0), 5.0)
-    l2 = pymunk.Segment(body, (-150.0, 0), (-150.0, 50.0), 5.0)
-
-    rotation_center_joint = pymunk.PinJoint(body,
-                                            rotation_center_body,
-                                            (0,0), (0,0)) # 3
-    joint_limit = 25
-    rotation_limit_joint = pymunk.SlideJoint(body,
-                                             rotation_limit_body,
-                                             (-100,0),
-                                             (0,0),
-                                             0, joint_limit) # 2
-    space.add(l1, l2, body,
-              rotation_center_joint, rotation_limit_joint)
-    return l1,l2
-
-
-# simulation(100,350,-20,250,280,0)  ## Good solution
 @theano.compile.ops.as_op(itypes=[tt.lscalar, tt.lscalar, tt.lscalar,
                                   tt.lscalar, tt.lscalar, tt.lscalar],
                           otypes=[tt.lscalar])
@@ -100,15 +73,13 @@ def simulation(xl1, yl1, θl1,
     ball = add_ball_static(space)
     
     [space.step(1/50.0) for i in range(0,5000)]
-    # print("( " + str(ball.body.position.x) + ", " + str(ball.body.position.y) + ")")
-    # return 1 if ball.body.position.x > 410 and ball.body.position.y < 240 else 20000000
     return np.array(ball.body.position.x, dtype=np.int64)
 
 def visualize_simulation(xl1, yl1, θl1,
                          xl2, yl2, θl2):
     pygame.init()
     screen = pygame.display.set_mode((600, 600))
-    pygame.display.set_caption("Ball in the bucket game")
+    pygame.display.set_caption("Ball in the bucket game")    
     clock = pygame.time.Clock()
 
     space = pymunk.Space()
@@ -121,7 +92,8 @@ def visualize_simulation(xl1, yl1, θl1,
 
     draw_options = DrawOptions(screen)
 
-    while True:
+    stop = False
+    while not stop:
         for event in pygame.event.get():
             if event.type == QUIT:
                 sys.exit(0)
@@ -130,6 +102,7 @@ def visualize_simulation(xl1, yl1, θl1,
 
         if ball.body.position.x > 410 and ball.body.position.y < 240:
             print("Ball in!")
+            stop=True
 
         screen.fill((255,255,255))
 
@@ -151,14 +124,20 @@ def main():
         xl2 = pm.DiscreteUniform('xl2', lower=0,upper=500)
         yl2 = pm.DiscreteUniform('yl2', lower=280,upper=281)
         θl2 = pm.DiscreteUniform('θl2', lower=0,upper=1)
-
-        # sim = pm.Deterministic('sim', simulation(xl1, yl1, θl1, xl2, yl2, θl2))
         
         obs = pm.Normal('obs',
                         mu=simulation(xl1, yl1, θl1, xl2, yl2, θl2),
                         sigma=.001, observed=484)
 
-        trace = pm.sample(10)      
+        trace = pm.sample(10)
 
+        
+        def print_and_visualize(t):
+            print(t)
+            visualize_simulation(t['xl1'], t['yl1'], t['θl1'],
+                                 t['xl2'], t['yl2'], t['θl2'])
+        
+        [print_and_visualize(t) for t in trace]
+        
 if __name__ == '__main__':
     sys.exit(main())
