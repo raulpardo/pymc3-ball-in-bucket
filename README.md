@@ -33,6 +33,8 @@ will print in the standard output the solutions.
 [Here](example-visualization.mp4) is an example visualization of one of the outputs that were
 automatically computed by the script.
 
+![](example-visualization.gif)
+
 
 ## Acknowledgment
 
