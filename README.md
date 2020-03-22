@@ -9,7 +9,7 @@ The program defines six random variables for the xy coordinates plus
 inclination of each bar. We set uniform priors for these
 variables---intuitively, this means that the bars could be located
 anywhere in the space and with any inclination. Then we use a normal
-distribution to constraint the final position of the ball. We set the
+distribution to constrain the final position of the ball. We set the
 mean of the distribution as the x position where the ball should end
 up and very low standard deviation---this forces the inference engine
 to only accept samples in which the ball ends up in the bucket.
@@ -27,6 +27,16 @@ To run it simply execute `python3 main.py` (after installing the
 libraries above). The program will generate 10 possible solutions (xy
 coordinates plus inclination) and visualize them. Additionally, it
 will print in the standard output the solutions.
+
+### Example
+
+Here is an example visualization of one of the outputs that were
+automatically computed by the script.
+
+<video width="350" height="400" controls>
+  <source src="example-visualization.mp4" type="video/mp4">
+</video>
+
 
 ## Acknowledgment
 
