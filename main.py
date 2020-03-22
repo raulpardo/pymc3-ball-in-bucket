@@ -60,7 +60,7 @@ def simulation(xl1, yl1, θl1,
     ball = add_ball_static(space)
     
     [space.step(1/50.0) for i in range(0,5000)]
-    return np.array(ball.body.position.x, dtype=np.int64)
+    return np.array(ball.body.position.x,dtype=np.int64) if ball.body.position.y > 210 else np.array(0,dtype=np.int64)
 
 def visualize_simulation(xl1, yl1, θl1,
                          xl2, yl2, θl2):
@@ -83,9 +83,9 @@ def visualize_simulation(xl1, yl1, θl1,
     while not stop:
         for event in pygame.event.get():
             if event.type == QUIT:
-                sys.exit(0)
+                stop=True
             elif event.type == KEYDOWN and event.key == K_ESCAPE:
-                sys.exit(0)
+                stop=True
 
         if ball.body.position.x > 410 and ball.body.position.y < 240:
             print("Ball in!")
@@ -103,14 +103,13 @@ def visualize_simulation(xl1, yl1, θl1,
 
 def main():
     with pm.Model() as model:
-        xl1 = pm.DiscreteUniform('xl1', lower=120,upper=121)
-        yl1 = pm.DiscreteUniform('yl1', lower=350,upper=351)
-        θl1 = pm.DiscreteUniform('θl1', lower=-20,upper=-19)
-
+        xl1 = pm.DiscreteUniform('xl1', lower=0,upper=500)
+        yl1 = pm.DiscreteUniform('yl1', lower=150,upper=500)
+        θl1 = pm.DiscreteUniform('θl1', lower=-20,upper=20)
 
         xl2 = pm.DiscreteUniform('xl2', lower=0,upper=500)
-        yl2 = pm.DiscreteUniform('yl2', lower=280,upper=281)
-        θl2 = pm.DiscreteUniform('θl2', lower=0,upper=1)
+        yl2 = pm.DiscreteUniform('yl2', lower=150,upper=500)
+        θl2 = pm.DiscreteUniform('θl2', lower=-20,upper=20)
         
         obs = pm.Normal('obs',
                         mu=simulation(xl1, yl1, θl1, xl2, yl2, θl2),
