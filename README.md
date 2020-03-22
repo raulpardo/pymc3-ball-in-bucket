@@ -7,11 +7,11 @@ bucket.
 
 The program defines six random variables for the xy coordinates plus
 inclination of each bar. We set uniform priors for these
-variables---intuitively, this means that the bars could be located
+variables—intuitively, this means that the bars could be located
 anywhere in the space and with any inclination. Then we use a normal
 distribution to constrain the final position of the ball. We set the
 mean of the distribution as the x position where the ball should end
-up and very low standard deviation---this forces the inference engine
+up and very low standard deviation—this forces the inference engine
 to only accept samples in which the ball ends up in the bucket.
 
 ## Dependencies
