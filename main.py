@@ -105,17 +105,17 @@ def main():
     with pm.Model() as model:
         xl1 = pm.DiscreteUniform('xl1', lower=0,upper=500)
         yl1 = pm.DiscreteUniform('yl1', lower=150,upper=500)
-        θl1 = pm.DiscreteUniform('θl1', lower=-20,upper=20)
+        θl1 = pm.DiscreteUniform('θl1', lower=-100,upper=100)
 
         xl2 = pm.DiscreteUniform('xl2', lower=0,upper=500)
         yl2 = pm.DiscreteUniform('yl2', lower=150,upper=500)
-        θl2 = pm.DiscreteUniform('θl2', lower=-20,upper=20)
+        θl2 = pm.DiscreteUniform('θl2', lower=-100,upper=100)
         
         obs = pm.Normal('obs',
                         mu=simulation(xl1, yl1, θl1, xl2, yl2, θl2),
                         sigma=.001, observed=484)
 
-        trace = pm.sample(10)
+        trace = pm.sample(10,tune=2000,cores=2)
 
         
         def print_and_visualize(t):
