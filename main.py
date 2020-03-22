@@ -1,6 +1,4 @@
 import sys, random
-## Example inspire by Oregon summer school lectures on probabilistic programming
-## Code for simulation and visualization inspired from getting started tutorial in pymunk website
 
 import pygame
 from pygame.locals import *
@@ -13,25 +11,14 @@ import theano
 import theano.tensor as tt
 import numpy as np
 
-def add_ball(space):
-    mass = 1
-    radius = 14
-    moment = pymunk.moment_for_circle(mass, 0, radius) # 1
-    body = pymunk.Body(mass, moment) # 2
-    x = random.randint(120, 480)
-    body.position = x, 550 # 3
-    shape = pymunk.Circle(body, radius) # 4
-    space.add(body, shape) # 5
-    return shape
-
 def add_ball_static(space):
     mass = 1
     radius = 14
-    moment = pymunk.moment_for_circle(mass, 0, radius) # 1
-    body = pymunk.Body(mass, moment) # 2
-    body.position = 150, 550 # 3
-    shape = pymunk.Circle(body, radius) # 4
-    space.add(body, shape) # 5
+    moment = pymunk.moment_for_circle(mass, 0, radius)
+    body = pymunk.Body(mass, moment)
+    body.position = 150, 550
+    shape = pymunk.Circle(body, radius)
+    space.add(body, shape)
     return shape
 
 def add_static_L(space,x,y,θ):
