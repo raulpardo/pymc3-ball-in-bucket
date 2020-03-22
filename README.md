@@ -33,9 +33,7 @@ will print in the standard output the solutions.
 Here is an example visualization of one of the outputs that were
 automatically computed by the script.
 
-<video width="350" height="400" controls>
-  <source src="example-visualization.mp4" type="video/mp4">
-</video>
+![](example-visualization.mp4)
 
 
 ## Acknowledgment
